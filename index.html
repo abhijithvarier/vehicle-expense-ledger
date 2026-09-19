@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Fleet Enterprise & TCO Intelligence Suite</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; }
+        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        @media print {
+            body { background: white !important; color: black !important; }
+            .no-print { display: none !important; }
+            .glass-panel { background: white !important; border: 1px solid #ccc !important; color: black !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-100 flex overflow-hidden">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between hidden md:flex z-20 backdrop-blur-xl no-print">
+        <div>
+            <!-- Brand Logo -->
+            <div class="h-20 px-6 flex items-center space-x-3 border-b border-slate-800/80">
+                <div class="bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 p-3 rounded-2xl text-slate-950 shadow-xl shadow-emerald-500/20">
+                    <i data-lucide="gauge" class="w-6 h-6 stroke-[2.5]"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-extrabold tracking-tight text-white">AUTONOMOUS</h1>
+                    <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Fleet Enterprise</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-2">
+                <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-emerald-400 border border-emerald-500/30 shadow-lg" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>North-Star Dashboard</span>
+                </button>
+                <button onclick="switchTab('vehicles')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60" data-tab="vehicles">
+                    <i data-lucide="car" class="w-4 h-4"></i><span>Vehicles & Health</span>
+                </button>
+                <button onclick="switchTab('fuel')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60" data-tab="fuel">
+                    <i data-lucide="fuel" class="w-4 h-4"></i><span>Fuel & Multi-Grade</span>
+                </button>
+                <button onclick="switchTab('service')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60" data-tab="service">
+                    <i data-lucide="wrench" class="w-4 h-4"></i><span>Service & Parts</span>
+                </button>
+                <button onclick="switchTab('expenses')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60" data-tab="expenses">
+                    <i data-lucide="receipt" class="w-4 h-4"></i><span>TCO & Expenses</span>
+                </button>
+                <button onclick="switchTab('analytics')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60" data-tab="analytics">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i><span>Analytics & Budget</span>
+                </button>
+                <button onclick="switchTab('backup')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60" data-tab="backup">
+                    <i data-lucide="database" class="w-4 h-4"></i><span>Multi-Format Backup</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer / Quick Vehicle Switcher -->
+        <div class="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-2">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Workspace</div>
+            <select id="globalVehicleSelect" class="w-full bg-slate-900 border border-slate-700/80 text-xs text-white rounded-xl p-3 focus:outline-none focus:border-emerald-500 font-bold cursor-pointer shadow-inner">
+                <!-- Populated Dynamically -->
+            </select>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
+        <!-- Top Header Bar -->
+        <header class="h-20 bg-slate-900/60 backdrop-blur-xl border-b border-slate-800/80 px-8 flex items-center justify-between sticky top-0 z-10 no-print">
+            <div class="flex items-center space-x-3 md:hidden">
+                <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 p-2.5 rounded-xl font-bold shadow-lg">
+                    <i data-lucide="gauge" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-sm font-bold text-white">Fleet Enterprise</h1>
+            </div>
+            <div class="hidden md:flex items-center space-x-3 text-xs text-slate-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Active Scope:</span>
+                <span id="headerActiveVehicleName" class="font-extrabold text-emerald-400 text-sm">Loading...</span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl transition flex items-center space-x-2 border border-slate-700">
+                    <i data-lucide="printer" class="w-4 h-4"></i><span>Print / PDF Report</span>
+                </button>
+                <button onclick="openModal('vehicleModal')" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl transition shadow-xl shadow-emerald-500/20 flex items-center space-x-2">
+                    <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
+                    <span>Add Vehicle</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex overflow-x-auto bg-slate-900 border-b border-slate-800 px-4 py-2 space-x-2 no-print">
+            <button onclick="switchTab('dashboard')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 whitespace-nowrap" data-tab="dashboard">Dashboard</button>
+            <button onclick="switchTab('vehicles')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 whitespace-nowrap" data-tab="vehicles">Vehicles</button>
+            <button onclick="switchTab('fuel')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 whitespace-nowrap" data-tab="fuel">Fuel</button>
+            <button onclick="switchTab('service')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 whitespace-nowrap" data-tab="service">Service</button>
+            <button onclick="switchTab('expenses')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 whitespace-nowrap" data-tab="expenses">TCO</button>
+            <button onclick="switchTab('analytics')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 whitespace-nowrap" data-tab="analytics">Analytics</button>
+            <button onclick="switchTab('backup')" class="mobile-tab px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 whitespace-nowrap" data-tab="backup">Backup</button>
+        </div>
+
+        <!-- Dynamic Content Views -->
+        <main class="p-6 md:p-10 space-y-8 max-w-7xl w-full mx-auto flex-grow">
+
+            <!-- ================= TAB 1: NORTH-STAR DASHBOARD ================= -->
+            <div id="tab-dashboard" class="tab-content space-y-8">
+                <!-- Reminders & Anomaly Alert Box -->
+                <div id="remindersContainer" class="hidden space-y-3"></div>
+
+                <!-- North-Star Key Performance Indicators -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300">
+                        <div class="absolute -right-4 -bottom-4 text-emerald-500/10 group-hover:text-emerald-500/20 transition"><i data-lucide="wallet" class="w-28 h-28"></i></div>
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">All-In Cost Per Km</p>
+                        <h3 id="kpiAllInCostPerKm" class="text-3xl font-black text-white mt-3">₹0.00 / km</h3>
+                        <div class="mt-4 flex items-center space-x-2 text-xs text-slate-400">
+                            Total TCO: <span class="text-emerald-400 font-bold" id="kpiTotalCost">₹0.00</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-teal-500/50 transition-all duration-300">
+                        <div class="absolute -right-4 -bottom-4 text-teal-500/10 group-hover:text-teal-500/20 transition"><i data-lucide="fuel" class="w-28 h-28"></i></div>
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Fuel Running Cost / Km</p>
+                        <h3 id="kpiFuelCostPerKm" class="text-3xl font-black text-emerald-400 mt-3">₹0.00 / km</h3>
+                        <div class="mt-4 flex items-center space-x-2 text-xs text-slate-400">
+                            Per 100 km: <span class="text-slate-200 font-bold" id="kpiCostPer100Km">₹0.00</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-cyan-500/50 transition-all duration-300">
+                        <div class="absolute -right-4 -bottom-4 text-cyan-500/10 group-hover:text-cyan-500/20 transition"><i data-lucide="activity" class="w-28 h-28"></i></div>
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Average Mileage (Full-Tank)</p>
+                        <h3 id="kpiLifetimeMileage" class="text-3xl font-black text-white mt-3">0.00 km/L</h3>
+                        <div class="mt-4 flex items-center space-x-2 text-xs text-slate-400">
+                            Last 5 Fills Avg: <span class="text-cyan-400 font-bold" id="kpiLast5Mileage">0.00 km/L</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-amber-500/50 transition-all duration-300">
+                        <div class="absolute -right-4 -bottom-4 text-amber-500/10 group-hover:text-amber-500/20 transition"><i data-lucide="wrench" class="w-28 h-28"></i></div>
+                        <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Maintenance / 1k Km</p>
+                        <h3 id="kpiMaintPer1k" class="text-3xl font-black text-white mt-3">₹0.00</h3>
+                        <div class="mt-4 flex items-center space-x-2 text-xs text-slate-400">
+                            Planned Ratio: <span class="text-amber-400 font-bold" id="kpiPlannedRatio">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Operational Metrics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="glass-panel p-5 rounded-2xl space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+                            <span>Vehicle Utilization Index</span>
+                            <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-400"></i>
+                        </div>
+                        <div class="text-2xl font-black text-emerald-400" id="kpiUtilization">0.0%</div>
+                        <p class="text-xs text-slate-500">Days logged vs days owned</p>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-2xl space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+                            <span>Monthly TCO Burn Rate</span>
+                            <i data-lucide="calendar" class="w-4 h-4 text-teal-400"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="kpiMonthlyBurn">₹0.00 / mo</div>
+                        <p class="text-xs text-slate-500">Normalized holding outflow</p>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-2xl space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+                            <span>Carbon Footprint</span>
+                            <i data-lucide="cloud" class="w-4 h-4 text-cyan-400"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="kpiCarbonEmissions">0.0 kg CO₂</div>
+                        <p class="text-xs text-slate-500">Greenhouse gas emission estimate</p>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-2xl space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-400 font-bold uppercase tracking-wider">
+                            <span>Data Completeness</span>
+                            <i data-lucide="database" class="w-4 h-4 text-indigo-400"></i>
+                        </div>
+                        <div class="text-2xl font-black text-white" id="kpiDataCompleteness">100%</div>
+                        <p class="text-xs text-slate-500">Active logging consistency</p>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel p-7 rounded-3xl shadow-2xl">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-sm font-extrabold text-white flex items-center space-x-2">
+                                <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+                                <span>Mileage Trend & Rolling Average (km/L)</span>
+                            </h3>
+                            <span class="text-[10px] bg-slate-800 text-slate-300 px-3 py-1 rounded-full font-bold">Full-Tank Weighted</span>
+                        </div>
+                        <div class="h-72"><canvas id="mileageTrendChart"></canvas></div>
+                    </div>
+
+                    <div class="glass-panel p-7 rounded-3xl shadow-2xl">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-sm font-extrabold text-white flex items-center space-x-2">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4 text-teal-400"></i>
+                                <span>Monthly Outflow & Fuel Price Trend</span>
+                            </h3>
+                            <span class="text-[10px] bg-slate-800 text-slate-300 px-3 py-1 rounded-full font-bold">Currency & Price/L</span>
+                        </div>
+                        <div class="h-72"><canvas id="monthlySpendChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Recent Tables Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+                        <div class="px-6 py-5 bg-slate-900/60 border-b border-slate-800/80 flex justify-between items-center">
+                            <h3 class="font-extrabold text-xs text-white uppercase tracking-wider">Recent Fuel Logs</h3>
+                            <button onclick="switchTab('fuel')" class="text-xs text-emerald-400 hover:underline font-bold">View All</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800/80">
+                                    <tr>
+                                        <th class="p-4">#</th>
+                                        <th class="p-4">Date</th>
+                                        <th class="p-4">Odometer</th>
+                                        <th class="p-4">Fuel Grade</th>
+                                        <th class="p-4">Total Cost</th>
+                                        <th class="p-4">Mileage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentFuelTableBody" class="divide-y divide-slate-800/40 text-slate-300"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+                        <div class="px-6 py-5 bg-slate-900/60 border-b border-slate-800/80 flex justify-between items-center">
+                            <h3 class="font-extrabold text-xs text-white uppercase tracking-wider">Recent Service Logs</h3>
+                            <button onclick="switchTab('service')" class="text-xs text-emerald-400 hover:underline font-bold">View All</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800/80">
+                                    <tr>
+                                        <th class="p-4">#</th>
+                                        <th class="p-4">Date</th>
+                                        <th class="p-4">Type / Parts</th>
+                                        <th class="p-4">Workshop</th>
+                                        <th class="p-4">Total Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentServiceTableBody" class="divide-y divide-slate-800/40 text-slate-300"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 2: VEHICLES & HEALTH ================= -->
+            <div id="tab-vehicles" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Vehicle Registry & Consumable Part Lifecycles</h2>
+                        <p class="text-xs text-slate-400">Track wear status and progress bars for engine oil, filters, brake pads, chain/sprocket, and tyres.</p>
+                    </div>
+                    <button onclick="openModal('vehicleModal')" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl shadow-xl shadow-emerald-500/20">
+                        + Add Vehicle
+                    </button>
+                </div>
+                <div id="vehiclesListContainer" class="grid grid-cols-1 gap-6"></div>
+            </div>
+
+            <!-- ================= TAB 3: FUEL & MULTI-GRADE ================= -->
+            <div id="tab-fuel" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Fuel & Multi-Grade Efficiency Logs</h2>
+                        <p class="text-xs text-slate-400">Full-tank calculation algorithm for precise km/L. Compare efficiency across regular fuel vs XP95/XP100.</p>
+                    </div>
+                    <button onclick="openFuelModalForAdd()" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl shadow-xl shadow-emerald-500/20">
+                        + Add Fuel Entry
+                    </button>
+                </div>
+
+                <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800/80">
+                                <tr>
+                                    <th class="p-4">#</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Odometer</th>
+                                    <th class="p-4">Fuel Grade</th>
+                                    <th class="p-4">Volume</th>
+                                    <th class="p-4">Price/Unit</th>
+                                    <th class="p-4">Total Cost</th>
+                                    <th class="p-4">Full Tank?</th>
+                                    <th class="p-4">Mileage (km/L)</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullFuelTableBody" class="divide-y divide-slate-800/40 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 4: SERVICE & PARTS ================= -->
+            <div id="tab-service" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Repair, Service & Parts Breakdown</h2>
+                        <p class="text-xs text-slate-400">Track part replacements, labour costs, warranty claims, and planned vs unplanned reliability ratios.</p>
+                    </div>
+                    <button onclick="openServiceModalForAdd()" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl shadow-xl shadow-emerald-500/20">
+                        + Add Service Log
+                    </button>
+                </div>
+
+                <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800/80">
+                                <tr>
+                                    <th class="p-4">#</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Odometer</th>
+                                    <th class="p-4">Service Type</th>
+                                    <th class="p-4">Parts Changed</th>
+                                    <th class="p-4">Tag</th>
+                                    <th class="p-4">Warranty?</th>
+                                    <th class="p-4">Total Cost</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullServiceTableBody" class="divide-y divide-slate-800/40 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 5: TCO & EXPENSES ================= -->
+            <div id="tab-expenses" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Incidental Expenses & Fixed TCO Heads</h2>
+                        <p class="text-xs text-slate-400">Categorize expenses across Insurance, PUC, Tolls, Fines, Accessories, Registration, Tax, and Wash.</p>
+                    </div>
+                    <button onclick="openExpenseModalForAdd()" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl shadow-xl shadow-emerald-500/20">
+                        + Add Expense
+                    </button>
+                </div>
+
+                <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/60 text-slate-400 border-b border-slate-800/80">
+                                <tr>
+                                    <th class="p-4">#</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Category</th>
+                                    <th class="p-4">Description</th>
+                                    <th class="p-4">Mode</th>
+                                    <th class="p-4">Amount</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullExpenseTableBody" class="divide-y divide-slate-800/40 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 6: FLEET ANALYTICS & BUDGET ================= -->
+            <div id="tab-analytics" class="tab-content hidden space-y-6">
+                <div class="glass-panel p-8 rounded-3xl shadow-2xl space-y-6">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Fleet Comparative Analysis & Budgeting</h2>
+                        <p class="text-xs text-slate-400 mt-1">Compare multiple vehicles side-by-side, check budget variance, and run fuel price scenario simulations.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Multi-Vehicle Comparison Matrix</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs bg-slate-950/50 rounded-2xl overflow-hidden border border-slate-800/80">
+                                <thead class="bg-slate-950 text-slate-400 border-b border-slate-800/80">
+                                    <tr>
+                                        <th class="p-4">Vehicle</th>
+                                        <th class="p-4">Type</th>
+                                        <th class="p-4">Total Distance</th>
+                                        <th class="p-4">All-In Cost/Km</th>
+                                        <th class="p-4">Fuel Cost/Km</th>
+                                        <th class="p-4">Avg Mileage</th>
+                                        <th class="p-4">Total Spend</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fleetComparisonTableBody" class="divide-y divide-slate-800/50 text-slate-300"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        <div class="bg-slate-950/70 p-6 rounded-2xl border border-slate-800/80 space-y-4">
+                            <h3 class="text-xs font-extrabold text-white uppercase tracking-wider">Monthly Budget Variance</h3>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1 font-bold">Set Monthly Budget (Currency)</label>
+                                    <input type="number" id="budgetInput" value="5000" oninput="updateBudgetVariance()" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-white font-bold">
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800/80 flex justify-between items-center">
+                                    <span class="text-slate-400 font-medium">Actual Monthly Outflow:</span>
+                                    <span id="actualMonthlySpend" class="font-black text-white">₹0.00</span>
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800/80 flex justify-between items-center">
+                                    <span class="text-slate-400 font-medium">Variance (Budget - Actual):</span>
+                                    <span id="budgetVarianceResult" class="font-black text-emerald-400">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/70 p-6 rounded-2xl border border-slate-800/80 space-y-4">
+                            <h3 class="text-xs font-extrabold text-white uppercase tracking-wider">Fuel Price Scenario Calculator</h3>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1 font-bold">Fuel Price Surge / Drop (+/- ₹)</label>
+                                    <input type="number" id="scenarioDelta" value="10" oninput="runScenarioSimulation()" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-white font-bold">
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800/80 flex justify-between items-center">
+                                    <span class="text-slate-400 font-medium">Current Fuel Cost/Km:</span>
+                                    <span id="scenarioCurrentFuelKm" class="font-black text-white">₹0.00</span>
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800/80 flex justify-between items-center">
+                                    <span class="text-slate-400 font-medium">Simulated Fuel Cost/Km:</span>
+                                    <span id="scenarioSimulatedFuelKm" class="font-black text-amber-400">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 7: MULTI-FORMAT BACKUP & IMPORTS ================= -->
+            <div id="tab-backup" class="tab-content hidden space-y-6">
+                <div class="glass-panel p-8 rounded-3xl shadow-2xl space-y-6">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Multi-Format Backup, Excel (XLSX), CSV & JSON Operations</h2>
+                        <p class="text-xs text-slate-400 mt-1">Export or import database backups across Excel (.xlsx), CSV, JSON, and pre-aggregated monthly summary reports.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Export Reports & Data</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                            <button onclick="exportXLSX()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs py-4 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg transition">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i><span>Export Excel (.xlsx)</span>
+                            </button>
+                            <button onclick="exportCSV('fuel')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-4 px-4 rounded-xl flex items-center justify-center space-x-2 border border-slate-700/60 transition">
+                                <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i><span>Export Fuel CSV</span>
+                            </button>
+                            <button onclick="exportCSV('service')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-4 px-4 rounded-xl flex items-center justify-center space-x-2 border border-slate-700/60 transition">
+                                <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i><span>Export Service CSV</span>
+                            </button>
+                            <button onclick="exportJSONBackup()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-4 px-4 rounded-xl flex items-center justify-center space-x-2 border border-slate-700/60 transition">
+                                <i data-lucide="database" class="w-4 h-4 text-cyan-400"></i><span>Export Full JSON</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider">Import Data (XLSX, CSV, JSON)</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-950/70 p-5 rounded-2xl border border-slate-800/80 space-y-2">
+                                <label class="block text-xs font-bold text-white">Import Excel (.xlsx) / CSV Files</label>
+                                <input type="file" accept=".xlsx, .xls, .csv" onchange="importSpreadsheet(event)" class="text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-emerald-400 hover:file:bg-slate-700 cursor-pointer w-full">
+                            </div>
+                            <div class="bg-slate-950/70 p-5 rounded-2xl border border-slate-800/80 space-y-2">
+                                <label class="block text-xs font-bold text-white">Restore from JSON Backup</label>
+                                <input type="file" accept=".json" onchange="importJSONBackup(event)" class="text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700 cursor-pointer w-full">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <p class="text-xs text-red-400 font-semibold">Danger Zone: Clearing local storage will permanently delete all records.</p>
+                        <button onclick="clearAllData()" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 font-bold text-xs px-5 py-3 rounded-xl transition">Clear Database</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Vehicle Modal -->
+    <div id="vehicleModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-700/60">
+            <div class="px-6 py-5 bg-slate-950 border-b border-slate-800/80 flex justify-between items-center">
+                <h3 class="font-extrabold text-xs text-white uppercase tracking-wider" id="vehicleModalTitle">Vehicle Asset Configuration</h3>
+                <button onclick="closeModal('vehicleModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="vehicleForm" onsubmit="saveVehicle(event)" class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="veh_id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Nickname / Name *</label>
+                        <input type="text" id="veh_nickname" required placeholder="e.g. Royal Enfield Himalayan" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Vehicle Type *</label>
+                        <select id="veh_type" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                            <option value="Motorcycle">Motorcycle</option>
+                            <option value="Car">Car</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Truck">Truck</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Make</label>
+                        <input type="text" id="veh_make" placeholder="e.g. Royal Enfield" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Model</label>
+                        <input type="text" id="veh_model" placeholder="e.g. Himalayan 450" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Year</label>
+                        <input type="number" id="veh_year" placeholder="2024" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Registration No. *</label>
+                        <input type="text" id="veh_reg" required placeholder="e.g. KL10BM6560" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Fuel Type</label>
+                        <select id="veh_fuelType" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                            <option value="Petrol">Petrol</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="CNG">CNG</option>
+                            <option value="Electric">Electric</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Purchase Price</label>
+                        <input type="number" id="veh_purchasePrice" placeholder="295000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Purchase Date</label>
+                        <input type="date" id="veh_purchaseDate" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Odometer (km) *</label>
+                        <input type="number" id="veh_odometer" required placeholder="12450" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Tank Capacity (L)</label>
+                        <input type="number" step="0.1" id="veh_tankCap" placeholder="17" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Currency</label>
+                        <input type="text" id="veh_currency" value="₹" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Annual Depr. %</label>
+                        <input type="number" id="veh_deprRate" value="15" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Insurance Expiry Date</label>
+                        <input type="date" id="veh_insExpiry" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">RC Expiry Date</label>
+                        <input type="date" id="veh_rcExpiry" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('vehicleModal')" class="bg-slate-800 text-slate-300 px-5 py-3 rounded-xl font-bold">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow-lg">Save Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fuel Log Modal -->
+    <div id="fuelModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700/60">
+            <div class="px-6 py-5 bg-slate-950 border-b border-slate-800/80 flex justify-between items-center">
+                <h3 class="font-extrabold text-xs text-white uppercase tracking-wider" id="fuelModalTitle">Add Fuel Fill-up Log</h3>
+                <button onclick="closeModal('fuelModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="fuelForm" onsubmit="saveFuelLog(event)" class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="fuel_id">
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Date *</label>
+                    <input type="date" id="fuel_date" required class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Odometer (km) *</label>
+                        <input type="number" id="fuel_odometer" required placeholder="13100" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Fuel Grade / Type *</label>
+                        <select id="fuel_grade" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white font-bold">
+                            <option value="Regular Petrol">Regular Petrol</option>
+                            <option value="XP95 (Premium)">XP95 (Premium Petrol)</option>
+                            <option value="XP100 (Super Premium)">XP100 (Super Premium)</option>
+                            <option value="Speed Petrol">Speed Petrol</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="CNG">CNG</option>
+                            <option value="Electric">Electric</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Volume (Litres) *</label>
+                        <input type="number" step="0.01" id="fuel_volume" required placeholder="14.2" oninput="calcFuelTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Price Per Unit *</label>
+                        <input type="number" step="0.01" id="fuel_price" required placeholder="104.20" oninput="calcFuelTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Total Cost (Auto)</label>
+                    <input type="number" step="0.01" id="fuel_totalCost" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl p-3 text-emerald-400 font-bold">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Station / Pump Name</label>
+                    <input type="text" id="fuel_station" placeholder="e.g. IOCL Kottakkal" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="fuel_isFull" checked class="w-4 h-4 text-emerald-600 rounded bg-slate-950 border-slate-700">
+                    <label for="fuel_isFull" class="font-bold text-slate-300">Full Tank Fill-up? (Required for Mileage Math)</label>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Notes</label>
+                    <input type="text" id="fuel_notes" placeholder="Optional comments" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('fuelModal')" class="bg-slate-800 text-slate-300 px-5 py-3 rounded-xl font-bold">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow-lg">Save Fuel Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Service Log Modal -->
+    <div id="serviceModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-700/60">
+            <div class="px-6 py-5 bg-slate-950 border-b border-slate-800/80 flex justify-between items-center">
+                <h3 class="font-extrabold text-xs text-white uppercase tracking-wider" id="serviceModalTitle">Add Service / Repair Entry</h3>
+                <button onclick="closeModal('serviceModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="serviceForm" onsubmit="saveServiceLog(event)" class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="serv_id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Date *</label>
+                        <input type="date" id="serv_date" required class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Odometer (km) *</label>
+                        <input type="number" id="serv_odometer" required placeholder="13000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Service Type *</label>
+                        <select id="serv_type" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                            <option value="Engine Oil Change">Engine Oil Change</option>
+                            <option value="Oil Filter">Oil Filter</option>
+                            <option value="Air Filter">Air Filter</option>
+                            <option value="Brake Pads">Brake Pads</option>
+                            <option value="Chain and Sprocket">Chain & Sprocket</option>
+                            <option value="Tyres">Tyres (Front/Rear)</option>
+                            <option value="Battery">Battery Replacement</option>
+                            <option value="General Service">General Service</option>
+                            <option value="Accident Repair">Accident Repair</option>
+                            <option value="Insurance Claim">Insurance Claim</option>
+                            <option value="PUC Check">PUC Check</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Maintenance Tag *</label>
+                        <select id="serv_tag" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                            <option value="Planned">Planned (Routine)</option>
+                            <option value="Unplanned">Unplanned (Breakdown)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Parts Changed (Comma Separated)</label>
+                    <input type="text" id="serv_parts" placeholder="e.g. Engine Oil, Oil Filter, Spark Plug" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Workshop / Vendor</label>
+                        <input type="text" id="serv_vendor" placeholder="e.g. Authorized Center" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Warranty Coverage?</label>
+                        <select id="serv_warranty" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                            <option value="No">No (Paid)</option>
+                            <option value="Yes">Yes (Under Warranty)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Description of Work</label>
+                    <input type="text" id="serv_desc" placeholder="e.g. Scheduled 10k overhaul" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Labour Cost</label>
+                        <input type="number" step="0.01" id="serv_labour" value="0" oninput="calcServiceTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Parts Cost</label>
+                        <input type="number" step="0.01" id="serv_partsCost" value="0" oninput="calcServiceTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Total (Auto)</label>
+                        <input type="number" step="0.01" id="serv_totalCost" required class="w-full bg-slate-950/50 border border-slate-800 rounded-xl p-3 text-emerald-400 font-bold">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Next Due Date</label>
+                        <input type="date" id="serv_nextDate" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Next Due Odometer</label>
+                        <input type="number" id="serv_nextOdo" placeholder="18000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('serviceModal')" class="bg-slate-800 text-slate-300 px-5 py-3 rounded-xl font-bold">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow-lg">Save Service Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700/60">
+            <div class="px-6 py-5 bg-slate-950 border-b border-slate-800/80 flex justify-between items-center">
+                <h3 class="font-extrabold text-xs text-white uppercase tracking-wider" id="expenseModalTitle">Add Expense Entry</h3>
+                <button onclick="closeModal('expenseModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="expenseForm" onsubmit="saveExpenseLog(event)" class="p-6 space-y-4 text-xs">
+                <input type="hidden" id="exp_id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Date *</label>
+                        <input type="date" id="exp_date" required class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Category *</label>
+                        <select id="exp_category" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white font-bold">
+                            <option value="Insurance">Insurance</option>
+                            <option value="PUC">PUC</option>
+                            <option value="Parking">Parking</option>
+                            <option value="Tolls">Tolls</option>
+                            <option value="Fine">Fine / Challan</option>
+                            <option value="Wash">Wash & Detailing</option>
+                            <option value="Accessories">Accessories</option>
+                            <option value="Registration">Registration</option>
+                            <option value="Tax">Road Tax</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Amount *</label>
+                        <input type="number" step="0.01" id="exp_amount" required placeholder="1500" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Payment Mode</label>
+                        <select id="exp_mode" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                            <option value="UPI">UPI / QR</option>
+                            <option value="Card">Credit/Debit Card</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Description</label>
+                    <input type="text" id="exp_desc" placeholder="e.g. Annual Comprehensive Insurance" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('expenseModal')" class="bg-slate-800 text-slate-300 px-5 py-3 rounded-xl font-bold">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow-lg">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT -->
+    <script>
+        let vehicles = JSON.parse(localStorage.getItem('fm_vehicles_v5')) || [];
+        let fuelLogs = JSON.parse(localStorage.getItem('fm_fuelLogs_v5')) || [];
+        let repairLogs = JSON.parse(localStorage.getItem('fm_repairLogs_v5')) || [];
+        let expenses = JSON.parse(localStorage.getItem('fm_expenses_v5')) || [];
+
+        let activeVehicleId = localStorage.getItem('fm_activeVehicleId_v5') || 'ALL';
+
+        let mileageChartInstance = null;
+        let spendChartInstance = null;
+
+        if (vehicles.length === 0) {
+            const sampleId1 = 'veh_' + Date.now();
+            vehicles.push(
+                {
+                    id: sampleId1, nickname: 'Royal Enfield Himalayan', type: 'Motorcycle', make: 'Royal Enfield', model: 'Himalayan 450', year: 2024, regNumber: 'KL10BM6560', fuelType: 'Petrol', tankCap: 17, odometer: 12450, purchasePrice: 295000, purchaseDate: '2024-03-15', deprRate: 15, currency: '₹', insExpiry: '2027-04-15', rcExpiry: '2039-03-10'
+                }
+            );
+            activeVehicleId = sampleId1;
+
+            fuelLogs.push(
+                { id: 'f1', vehicleId: sampleId1, date: '2026-04-10', odometer: 10200, grade: 'Regular Petrol', volume: 14.2, price: 102.50, total: 1455.50, station: 'IOCL', isFull: true, notes: 'Initial fill' },
+                { id: 'f2', vehicleId: sampleId1, date: '2026-05-02', odometer: 10650, grade: 'XP95 (Premium)', volume: 13.8, price: 108.00, total: 1490.40, station: 'BPCL', isFull: true, notes: 'XP95 test' },
+                { id: 'f3', vehicleId: sampleId1, date: '2026-05-25', odometer: 11120, grade: 'XP95 (Premium)', volume: 14.5, price: 108.00, total: 1566.00, station: 'IOCL', isFull: true, notes: '' },
+                { id: 'f4', vehicleId: sampleId1, date: '2026-06-18', odometer: 11600, grade: 'Regular Petrol', volume: 14.0, price: 104.20, total: 1458.80, station: 'HPCL', isFull: true, notes: '' },
+                { id: 'f5', vehicleId: sampleId1, date: '2026-07-12', odometer: 12050, grade: 'Regular Petrol', volume: 13.9, price: 104.20, total: 1448.38, station: 'IOCL', isFull: true, notes: '' },
+                { id: 'f6', vehicleId: sampleId1, date: '2026-08-05', odometer: 12450, grade: 'Regular Petrol', volume: 12.5, price: 105.00, total: 1312.50, station: 'IOCL', isFull: true, notes: 'Commute' }
+            );
+
+            repairLogs.push(
+                { id: 'r1', vehicleId: sampleId1, date: '2026-04-15', odometer: 10300, type: 'Engine Oil Change', parts: 'Engine Oil, Oil Filter', tag: 'Planned', vendor: 'Authorized Service Center', desc: '10k service', labour: 450, partsCost: 1150, total: 1600, warranty: 'No', nextDate: '2026-10-15', nextOdo: 15500 },
+                { id: 'r2', vehicleId: sampleId1, date: '2026-06-20', odometer: 11650, type: 'Brake Pads', parts: 'OEM Brake Pads', tag: 'Planned', vendor: 'Local Expert Garage', desc: 'Front pads', labour: 200, partsCost: 850, total: 1050, warranty: 'No', nextDate: '', nextOdo: 20000 }
+            );
+
+            expenses.push(
+                { id: 'e1', vehicleId: sampleId1, date: '2026-04-12', category: 'Insurance', amount: 3850, desc: 'Annual Comprehensive', mode: 'UPI' },
+                { id: 'e2', vehicleId: sampleId1, date: '2026-05-10', category: 'Wash', amount: 250, desc: 'Water wash', mode: 'Cash' }
+            );
+
+            saveAllToStorage();
+        }
+
+        function saveAllToStorage() {
+            localStorage.setItem('fm_vehicles_v5', JSON.stringify(vehicles));
+            localStorage.setItem('fm_fuelLogs_v5', JSON.stringify(fuelLogs));
+            localStorage.setItem('fm_repairLogs_v5', JSON.stringify(repairLogs));
+            localStorage.setItem('fm_expenses_v5', JSON.stringify(expenses));
+            localStorage.setItem('fm_activeVehicleId_v5', activeVehicleId);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initVehicleDropdown();
+            refreshAllViews();
+
+            document.getElementById('globalVehicleSelect').addEventListener('change', (e) => {
+                activeVehicleId = e.target.value;
+                localStorage.setItem('fm_activeVehicleId_v5', activeVehicleId);
+                refreshAllViews();
+            });
+        });
+
+        function refreshAllViews() {
+            initVehicleDropdown();
+            renderDashboard();
+            renderVehiclesTab();
+            renderFuelTab();
+            renderServiceTab();
+            renderExpenseTab();
+            renderAnalyticsTab();
+            lucide.createIcons();
+        }
+
+        function initVehicleDropdown() {
+            const select = document.getElementById('globalVehicleSelect');
+            select.innerHTML = '<option value="ALL">🌐 All Vehicles (Fleet Scope)</option>';
+            vehicles.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.nickname} (${v.regNumber})`;
+                if (v.id === activeVehicleId) opt.selected = true;
+                select.appendChild(opt);
+            });
+            if (activeVehicleId === 'ALL') select.value = 'ALL';
+
+            const activeVeh = vehicles.find(v => v.id === activeVehicleId);
+            document.getElementById('headerActiveVehicleName').textContent = activeVehicleId === 'ALL' ? 'Fleet-Wide Overview' : (activeVeh ? `${activeVeh.nickname} [${activeVeh.regNumber}]` : 'Workspace');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-gradient-to-r', 'from-emerald-500/20', 'to-teal-500/10', 'text-emerald-400', 'border', 'border-emerald-500/30', 'shadow-lg');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60');
+            });
+            document.querySelectorAll('.mobile-tab').forEach(btn => {
+                btn.classList.remove('bg-emerald-500/20', 'text-emerald-400');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            
+            const activeNavBtn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
+            if (activeNavBtn) {
+                activeNavBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60');
+                activeNavBtn.classList.add('bg-gradient-to-r', 'from-emerald-500/20', 'to-teal-500/10', 'text-emerald-400', 'border', 'border-emerald-500/30', 'shadow-lg');
+            }
+
+            const activeMobileBtn = document.querySelector(`.mobile-tab[data-tab="${tabName}"]`);
+            if (activeMobileBtn) {
+                activeMobileBtn.classList.remove('text-slate-400');
+                activeMobileBtn.classList.add('bg-emerald-500/20', 'text-emerald-400');
+            }
+
+            lucide.createIcons();
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function openFuelModalForAdd() {
+            document.getElementById('fuelModalTitle').textContent = 'Add Fuel Fill-up Log';
+            document.getElementById('fuelForm').reset();
+            document.getElementById('fuel_id').value = '';
+            document.getElementById('fuel_date').value = new Date().toISOString().split('T')[0];
+            if (activeVehicleId !== 'ALL') {
+                const activeVeh = vehicles.find(v => v.id === activeVehicleId);
+                if (activeVeh) document.getElementById('fuel_odometer').value = activeVeh.odometer;
+            }
+            openModal('fuelModal');
+        }
+
+        function editFuelLog(id) {
+            const f = fuelLogs.find(item => item.id === id);
+            if (!f) return;
+            document.getElementById('fuelModalTitle').textContent = 'Edit Fuel Log';
+            document.getElementById('fuel_id').value = f.id;
+            document.getElementById('fuel_date').value = f.date;
+            document.getElementById('fuel_odometer').value = f.odometer;
+            document.getElementById('fuel_grade').value = f.grade || 'Regular Petrol';
+            document.getElementById('fuel_volume').value = f.volume;
+            document.getElementById('fuel_price').value = f.price;
+            document.getElementById('fuel_totalCost').value = f.total;
+            document.getElementById('fuel_station').value = f.station || '';
+            document.getElementById('fuel_isFull').checked = f.isFull;
+            document.getElementById('fuel_notes').value = f.notes || '';
+            openModal('fuelModal');
+        }
+
+        function openServiceModalForAdd() {
+            document.getElementById('serviceModalTitle').textContent = 'Add Service / Repair Entry';
+            document.getElementById('serviceForm').reset();
+            document.getElementById('serv_id').value = '';
+            document.getElementById('serv_date').value = new Date().toISOString().split('T')[0];
+            if (activeVehicleId !== 'ALL') {
+                const activeVeh = vehicles.find(v => v.id === activeVehicleId);
+                if (activeVeh) document.getElementById('serv_odometer').value = activeVeh.odometer;
+            }
+            openModal('serviceModal');
+        }
+
+        function editServiceLog(id) {
+            const s = repairLogs.find(item => item.id === id);
+            if (!s) return;
+            document.getElementById('serviceModalTitle').textContent = 'Edit Service Log';
+            document.getElementById('serv_id').value = s.id;
+            document.getElementById('serv_date').value = s.date;
+            document.getElementById('serv_odometer').value = s.odometer;
+            document.getElementById('serv_type').value = s.type;
+            document.getElementById('serv_parts').value = s.parts || '';
+            document.getElementById('serv_tag').value = s.tag || 'Planned';
+            document.getElementById('serv_vendor').value = s.vendor || '';
+            document.getElementById('serv_desc').value = s.desc || '';
+            document.getElementById('serv_labour').value = s.labour || 0;
+            document.getElementById('serv_partsCost').value = s.partsCost || 0;
+            document.getElementById('serv_totalCost').value = s.total;
+            document.getElementById('serv_warranty').value = s.warranty || 'No';
+            document.getElementById('serv_nextDate').value = s.nextDate || '';
+            document.getElementById('serv_nextOdo').value = s.nextOdo || '';
+            openModal('serviceModal');
+        }
+
+        function openExpenseModalForAdd() {
+            document.getElementById('expenseModalTitle').textContent = 'Add Expense Entry';
+            document.getElementById('expenseForm').reset();
+            document.getElementById('exp_id').value = '';
+            document.getElementById('exp_date').value = new Date().toISOString().split('T')[0];
+            openModal('expenseModal');
+        }
+
+        function editExpenseLog(id) {
+            const e = expenses.find(item => item.id === id);
+            if (!e) return;
+            document.getElementById('expenseModalTitle').textContent = 'Edit Expense Entry';
+            document.getElementById('exp_id').value = e.id;
+            document.getElementById('exp_date').value = e.date;
+            document.getElementById('exp_category').value = e.category;
+            document.getElementById('exp_amount').value = e.amount;
+            document.getElementById('exp_mode').value = e.mode;
+            document.getElementById('exp_desc').value = e.desc || '';
+            openModal('expenseModal');
+        }
+
+        function getVehicleData(vehId) {
+            const vehicle = vehicles.find(v => v.id === vehId);
+            if (!vehicle) return null;
+
+            // Strict chronological sort: Date ascending, then Odometer ascending
+            const vFuel = fuelLogs.filter(f => f.vehicleId === vehId).sort((a,b) => new Date(a.date) - new Date(b.date) || a.odometer - b.odometer);
+            const vService = repairLogs.filter(r => r.vehicleId === vehId).sort((a,b) => new Date(a.date) - new Date(b.date) || a.odometer - b.odometer);
+            const vExpense = expenses.filter(e => e.vehicleId === vehId).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            // STRICT FULL-TANK MILEAGE CALCULATION ALGORITHM
+            let calculatedFills = [];
+            let prevFullOdo = null;
+            let prevFullIndex = -1;
+
+            vFuel.forEach((f, idx) => {
+                let mileage = null;
+                if (f.isFull) {
+                    if (prevFullOdo !== null) {
+                        let totalVolBetween = 0;
+                        for (let i = prevFullIndex + 1; i <= idx; i++) {
+                            totalVolBetween += Number(vFuel[i].volume);
+                        }
+                        let distCovered = f.odometer - prevFullOdo;
+                        if (totalVolBetween > 0) mileage = distCovered / totalVolBetween;
+                    }
+                    prevFullOdo = f.odometer;
+                    prevFullIndex = idx;
+                }
+                calculatedFills.push({ ...f, mileage });
+            });
+
+            let totalFuelCost = vFuel.reduce((sum, f) => sum + Number(f.total || (f.volume * f.price)), 0);
+            let totalFuelVolume = vFuel.reduce((sum, f) => sum + Number(f.volume), 0);
+            let totalMaintCost = vService.reduce((sum, r) => sum + Number(r.total), 0);
+            let totalOtherExpense = vExpense.reduce((sum, e) => sum + Number(e.amount), 0);
+            let grandTotalCost = totalFuelCost + totalMaintCost + totalOtherExpense;
+
+            let minOdo = vFuel.length > 0 ? vFuel[0].odometer : vehicle.odometer;
+            let maxOdo = vehicle.odometer;
+            if (vFuel.length > 0) maxOdo = Math.max(maxOdo, ...vFuel.map(f => f.odometer));
+            if (vService.length > 0) maxOdo = Math.max(maxOdo, ...vService.map(r => r.odometer));
+
+            let totalDistanceTracked = Math.max(0, maxOdo - minOdo);
+            if (totalDistanceTracked === 0 && vFuel.length > 1) {
+                totalDistanceTracked = vFuel[vFuel.length - 1].odometer - vFuel[0].odometer;
+            }
+
+            let allInCostPerKm = totalDistanceTracked > 0 ? grandTotalCost / totalDistanceTracked : 0;
+            let fuelCostPerKm = totalDistanceTracked > 0 ? totalFuelCost / totalDistanceTracked : 0;
+            let maintCostPer1k = totalDistanceTracked > 0 ? (totalMaintCost / (totalDistanceTracked / 1000)) : 0;
+            let costPer100Km = allInCostPerKm * 100;
+            let carbonEmissionsKg = totalFuelVolume * 2.31;
+
+            let plannedMaintCost = vService.filter(s => s.tag === 'Planned').reduce((sum, s) => sum + Number(s.total), 0);
+            let plannedRatio = totalMaintCost > 0 ? Math.round((plannedMaintCost / totalMaintCost) * 100) : 100;
+
+            let validMileages = calculatedFills.filter(f => f.mileage !== null && f.mileage > 0);
+            let lifetimeMileage = validMileages.length > 0 ? validMileages.reduce((sum, f) => sum + f.mileage, 0) / validMileages.length : 0;
+
+            let last5Fills = [...calculatedFills].reverse().filter(f => f.mileage !== null && f.mileage > 0).slice(0, 5);
+            let last5Mileage = last5Fills.length > 0 ? last5Fills.reduce((sum, f) => sum + f.mileage, 0) / last5Fills.length : 0;
+
+            let purchaseDate = vehicle.purchaseDate ? new Date(vehicle.purchaseDate) : new Date();
+            let daysOwned = Math.max(1, Math.ceil((new Date() - purchaseDate) / (1000 * 60 * 60 * 24)));
+            let logsCount = vFuel.length + vService.length + vExpense.length;
+            let utilizationIndex = Math.min(100, (logsCount / daysOwned) * 100);
+
+            let monthsElapsed = Math.max(1, Math.round(daysOwned / 30.44));
+            let monthlyBurnRate = grandTotalCost / monthsElapsed;
+
+            return {
+                vehicle, vFuel: calculatedFills, vService, vExpense, totalFuelCost, totalMaintCost, totalOtherExpense, grandTotalCost, totalDistanceTracked, allInCostPerKm, fuelCostPerKm, maintCostPer1k, costPer100Km, carbonEmissionsKg, plannedRatio, lifetimeMileage, last5Mileage, monthlyBurnRate, utilizationIndex
+            };
+        }
+
+        function getActiveScopeData() {
+            if (activeVehicleId === 'ALL') {
+                let combinedFuel = [];
+                let combinedService = [];
+                let combinedExpense = [];
+                let totalDist = 0;
+                let totalFuelC = 0;
+                let totalMaintC = 0;
+                let totalOtherC = 0;
+                let totalVol = 0;
+
+                vehicles.forEach(v => {
+                    let d = getVehicleData(v.id);
+                    if (d) {
+                        combinedFuel = combinedFuel.concat(d.vFuel);
+                        combinedService = combinedService.concat(d.vService);
+                        combinedExpense = combinedExpense.concat(d.vExpense);
+                        totalDist += d.totalDistanceTracked;
+                        totalFuelC += d.totalFuelCost;
+                        totalMaintC += d.totalMaintCost;
+                        totalOtherC += d.totalOtherExpense;
+                        totalVol += d.vFuel.reduce((sum, f) => sum + Number(f.volume), 0);
+                    }
+                });
+
+                let grandTotal = totalFuelC + totalMaintC + totalOtherC;
+                let allInCostPerKm = totalDist > 0 ? grandTotal / totalDist : 0;
+                let fuelCostPerKm = totalDist > 0 ? totalFuelC / totalDist : 0;
+                let maintCostPer1k = totalDist > 0 ? (totalMaintC / (totalDist / 1000)) : 0;
+                let lifetimeMileage = totalVol > 0 ? totalDist / totalVol : 0;
+
+                return {
+                    vehicle: { nickname: 'All Vehicles Fleet', currency: '₹', regNumber: 'FLEET-SCOPE', odometer: totalDist },
+                    vFuel: combinedFuel.sort((a,b) => new Date(a.date) - new Date(b.date) || a.odometer - b.odometer),
+                    vService: combinedService.sort((a,b) => new Date(a.date) - new Date(b.date) || a.odometer - b.odometer),
+                    vExpense: combinedExpense.sort((a,b) => new Date(a.date) - new Date(b.date)),
+                    totalFuelCost: totalFuelC, totalMaintCost: totalMaintC, totalOtherExpense: totalOtherC, grandTotalCost: grandTotal, totalDistanceTracked: totalDist, allInCostPerKm, fuelCostPerKm, maintCostPer1k, costPer100Km: allInCostPerKm * 100, carbonEmissionsKg: totalVol * 2.31, plannedRatio: 85, lifetimeMileage, last5Mileage: lifetimeMileage, monthlyBurnRate: grandTotal / 12, utilizationIndex: 75.0
+                };
+            } else {
+                return getVehicleData(activeVehicleId);
+            }
+        }
+
+        function renderDashboard() {
+            const data = getActiveScopeData();
+            if (!data) return;
+            const cur = data.vehicle.currency || '₹';
+
+            document.getElementById('kpiAllInCostPerKm').textContent = cur + data.allInCostPerKm.toFixed(2) + ' / km';
+            document.getElementById('kpiTotalCost').textContent = cur + data.grandTotalCost.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('kpiFuelCostPerKm').textContent = cur + data.fuelCostPerKm.toFixed(2) + ' / km';
+            document.getElementById('kpiCostPer100Km').textContent = cur + data.costPer100Km.toFixed(2);
+            document.getElementById('kpiLifetimeMileage').textContent = data.lifetimeMileage.toFixed(2) + ' km/L';
+            document.getElementById('kpiLast5Mileage').textContent = data.last5Mileage.toFixed(2) + ' km/L';
+            document.getElementById('kpiMaintPer1k').textContent = cur + data.maintCostPer1k.toFixed(2);
+            document.getElementById('kpiPlannedRatio').textContent = data.plannedRatio + '%';
+            document.getElementById('kpiUtilization').textContent = data.utilizationIndex.toFixed(1) + '%';
+            document.getElementById('kpiMonthlyBurn').textContent = cur + data.monthlyBurnRate.toLocaleString('en-IN', {maximumFractionDigits: 0}) + ' / mo';
+            document.getElementById('kpiCarbonEmissions').textContent = data.carbonEmissionsKg.toFixed(1) + ' kg CO₂';
+            
+            let healthScore = 100;
+            if (data.plannedRatio < 70) healthScore -= 15;
+            if (data.maintCostPer1k > 500) healthScore -= 15;
+            document.getElementById('kpiHealthScore').textContent = healthScore + ' / 100';
+            document.getElementById('kpiDataCompleteness').textContent = data.vFuel.length > 3 ? '100%' : '65%';
+
+            renderRemindersAndAnomalies(data);
+
+            const recentFuelBody = document.getElementById('recentFuelTableBody');
+            recentFuelBody.innerHTML = '';
+            const recentFills = [...data.vFuel].reverse().slice(0, 5);
+            recentFills.forEach((f, idx) => {
+                const globalIndex = data.vFuel.length - idx;
+                recentFuelBody.innerHTML += `
+                    <tr class="hover:bg-slate-800/45 transition">
+                        <td class="p-4 font-bold text-slate-400">#${globalIndex}</td>
+                        <td class="p-4">${f.date}</td>
+                        <td class="p-4">${f.odometer.toLocaleString()} km</td>
+                        <td class="p-4 font-bold text-teal-400">${f.grade || 'Regular Petrol'}</td>
+                        <td class="p-4 font-black text-white">${cur}${Number(f.total).toFixed(2)}</td>
+                        <td class="p-4 text-emerald-400 font-extrabold">${f.mileage ? f.mileage.toFixed(2) + ' km/L' : '<span class="text-slate-500 font-normal">Partial (No Calc)</span>'}</td>
+                    </tr>
+                `;
+            });
+
+            const recentServiceBody = document.getElementById('recentServiceTableBody');
+            recentServiceBody.innerHTML = '';
+            const recentServices = [...data.vService].reverse().slice(0, 5);
+            recentServices.forEach((s, idx) => {
+                const globalIndex = data.vService.length - idx;
+                recentServiceBody.innerHTML += `
+                    <tr class="hover:bg-slate-800/45 transition">
+                        <td class="p-4 font-bold text-slate-400">#${globalIndex}</td>
+                        <td class="p-4">${s.date}</td>
+                        <td class="p-4 font-bold text-white">${s.type} <span class="text-[10px] text-slate-400 font-normal">(${s.parts || 'N/A'})</span></td>
+                        <td class="p-4 text-slate-400">${s.vendor || 'N/A'}</td>
+                        <td class="p-4 font-black text-white">${cur}${Number(s.total).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            renderCharts(data);
+        }
+
+        function renderRemindersAndAnomalies(data) {
+            const container = document.getElementById('remindersContainer');
+            container.innerHTML = '';
+            let alerts = [];
+            const today = new Date();
+
+            let vehList = activeVehicleId === 'ALL' ? vehicles : [vehicles.find(v => v.id === activeVehicleId)];
+            vehList.forEach(veh => {
+                if (!veh) return;
+                if (veh.insExpiry) {
+                    let diffDays = Math.ceil((new Date(veh.insExpiry) - today) / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 30) alerts.push({ type: 'warning', text: `Insurance for ${veh.nickname} expires in ${diffDays} days (${veh.insExpiry}).` });
+                }
+                if (veh.rcExpiry) {
+                    let diffDays = Math.ceil((new Date(veh.rcExpiry) - today) / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 30) alerts.push({ type: 'warning', text: `RC Registration for ${veh.nickname} expires in ${diffDays} days (${veh.rcExpiry}).` });
+                }
+            });
+
+            if (data.vFuel.length >= 3) {
+                let validFills = data.vFuel.filter(f => f.mileage);
+                if (validFills.length >= 2) {
+                    let lastFill = validFills[validFills.length - 1];
+                    if (lastFill.mileage < data.lifetimeMileage * 0.9) {
+                        alerts.push({ type: 'danger', text: `Efficiency Anomaly! Recent mileage (${lastFill.mileage.toFixed(1)} km/L) is >10% below your benchmark.` });
+                    }
+                }
+            }
+
+            if (alerts.length > 0) {
+                container.classList.remove('hidden');
+                alerts.forEach(a => {
+                    let color = a.type === 'danger' ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-300';
+                    container.innerHTML += `
+                        <div class="p-4 rounded-2xl border ${color} flex items-center space-x-3 text-xs font-bold shadow-xl backdrop-blur-md">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0"></i>
+                            <span>${a.text}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function renderCharts(data) {
+            const chartFills = data.vFuel.filter(f => f.mileage);
+            const labels = chartFills.map(f => f.date);
+            const mileages = chartFills.map(f => f.mileage.toFixed(2));
+
+            let rollingAvgs = [];
+            for (let i = 0; i < chartFills.length; i++) {
+                let slice = chartFills.slice(Math.max(0, i - 2), i + 1);
+                let avg = slice.reduce((sum, f) => sum + f.mileage, 0) / slice.length;
+                rollingAvgs.push(avg.toFixed(2));
+            }
+
+            const ctxMileage = document.getElementById('mileageTrendChart').getContext('2d');
+            if (mileageChartInstance) mileageChartInstance.destroy();
+            mileageChartInstance = new Chart(ctxMileage, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Full-Tank Mileage (km/L)',
+                            data: mileages,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#10b981',
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Rolling Avg (3 Fills)',
+                            data: rollingAvgs,
+                            borderColor: '#38bdf8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11, weight: 'bold' } } } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#94a3b8', font: { weight: 'bold' } } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { weight: 'bold' } } }
+                    }
+                }
+            });
+
+            let monthlyMap = {};
+            let monthlyPriceMap = {};
+            let monthlyPriceCount = {};
+
+            data.vFuel.forEach(f => {
+                let m = f.date.substring(0, 7);
+                monthlyMap[m] = (monthlyMap[m] || 0) + Number(f.total || (f.volume * f.price));
+                monthlyPriceMap[m] = (monthlyPriceMap[m] || 0) + Number(f.price);
+                monthlyPriceCount[m] = (monthlyPriceCount[m] || 0) + 1;
+            });
+            data.vService.forEach(s => {
+                let m = s.date.substring(0, 7);
+                monthlyMap[m] = (monthlyMap[m] || 0) + Number(s.total);
+            });
+            data.vExpense.forEach(e => {
+                let m = e.date.substring(0, 7);
+                monthlyMap[m] = (monthlyMap[m] || 0) + Number(e.amount);
+            });
+
+            let sortedMonths = Object.keys(monthlyMap).sort();
+            let spendData = sortedMonths.map(m => monthlyMap[m]);
+            let priceData = sortedMonths.map(m => monthlyPriceCount[m] ? (monthlyPriceMap[m] / monthlyPriceCount[m]).toFixed(2) : 0);
+
+            const ctxSpend = document.getElementById('monthlySpendChart').getContext('2d');
+            if (spendChartInstance) spendChartInstance.destroy();
+            spendChartInstance = new Chart(ctxSpend, {
+                type: 'bar',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [
+                        {
+                            label: 'Monthly Outflow',
+                            data: spendData,
+                            backgroundColor: '#14b8a6',
+                            borderRadius: 8,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Avg Fuel Price / Litre',
+                            data: priceData,
+                            type: 'line',
+                            borderColor: '#f59e0b',
+                            borderWidth: 3,
+                            yAxisID: 'y1',
+                            pointBackgroundColor: '#f59e0b',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11, weight: 'bold' } } } },
+                    scales: {
+                        y: { position: 'left', grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#94a3b8', font: { weight: 'bold' } } },
+                        y1: { position: 'right', grid: { display: false }, ticks: { color: '#f59e0b', font: { weight: 'bold' } } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        function renderVehiclesTab() {
+            const container = document.getElementById('vehiclesListContainer');
+            container.innerHTML = '';
+
+            vehicles.forEach(v => {
+                let d = getVehicleData(v.id);
+                if (!d) return;
+
+                const partsTracked = [
+                    { name: 'Engine Oil Change', interval: 3000 },
+                    { name: 'Air Filter', interval: 10000 },
+                    { name: 'Brake Pads', interval: 12000 },
+                    { name: 'Chain and Sprocket', interval: 20000 },
+                    { name: 'Tyres', interval: 25000 }
+                ];
+                let partsStatusHTML = '';
+
+                partsTracked.forEach(part => {
+                    const lastLog = d.vService.filter(s => s.type === part.name || (s.parts && s.parts.toLowerCase().includes(part.name.toLowerCase()))).sort((a,b) => b.odometer - a.odometer)[0];
+                    let odoCovered = lastLog ? v.odometer - lastLog.odometer : part.interval;
+                    let percentage = Math.min(100, Math.max(0, Math.round((odoCovered / part.interval) * 100)));
+                    let barColor = percentage > 85 ? 'bg-red-500' : (percentage > 60 ? 'bg-amber-500' : 'bg-emerald-500');
+                    let statusLabel = lastLog ? `${odoCovered.toLocaleString()} km since replacement` : 'No record logged';
+
+                    partsStatusHTML += `
+                        <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-extrabold text-white">${part.name}</span>
+                                <span class="text-slate-400 font-bold">${percentage}% life used</span>
+                            </div>
+                            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 shadow-lg" style="width: ${percentage}%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] text-slate-400 font-medium">
+                                <span>${statusLabel}</span>
+                                <span>Target: ${part.interval.toLocaleString()} km</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="glass-panel rounded-3xl p-7 space-y-5 shadow-2xl">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800/80 pb-5 gap-3">
+                            <div>
+                                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30">${v.type}</span>
+                                <h3 class="text-lg font-black text-white mt-2">${v.nickname} <span class="text-xs font-normal text-slate-400">(${v.regNumber})</span></h3>
+                                <p class="text-xs text-slate-400 mt-0.5">${v.make || ''} ${v.model || ''} (${v.year || ''}) | Odometer: <strong class="text-white">${v.odometer.toLocaleString()} km</strong></p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="editVehicle('${v.id}')" class="bg-slate-800 hover:bg-slate-700 text-white text-xs px-4 py-2 rounded-xl font-bold">Edit</button>
+                                <button onclick="deleteVehicle('${v.id}')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-4 py-2 rounded-xl font-bold border border-red-500/20">Delete</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-3">Consumable Parts Health & Wear Lifecycles</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                ${partsStatusHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderFuelTab() {
+            const data = getActiveScopeData();
+            const tbody = document.getElementById('fullFuelTableBody');
+            tbody.innerHTML = '';
+            if (!data) return;
+            const cur = data.vehicle.currency || '₹';
+
+            data.vFuel.forEach((f, idx) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/45 transition">
+                        <td class="p-4 font-bold text-slate-400">#${idx + 1}</td>
+                        <td class="p-4">${f.date}</td>
+                        <td class="p-4">${f.odometer.toLocaleString()} km</td>
+                        <td class="p-4 font-bold text-teal-400">${f.grade || 'Regular Petrol'}</td>
+                        <td class="p-4">${f.volume} L</td>
+                        <td class="p-4">${cur}${f.price}</td>
+                        <td class="p-4 font-black text-white">${cur}${Number(f.total).toFixed(2)}</td>
+                        <td class="p-4"><span class="px-3 py-1 rounded-full text-[10px] font-black ${f.isFull ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">${f.isFull ? 'Full Tank' : 'Partial'}</span></td>
+                        <td class="p-4 text-emerald-400 font-extrabold">${f.mileage ? f.mileage.toFixed(2) + ' km/L' : '<span class="text-slate-500 font-normal">N/A (Partial)</span>'}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="editFuelLog('${f.id}')" class="text-emerald-400 hover:underline font-bold">Edit</button>
+                            <button onclick="deleteFuelLog('${f.id}')" class="text-red-400 hover:underline font-bold">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderServiceTab() {
+            const data = getActiveScopeData();
+            const tbody = document.getElementById('fullServiceTableBody');
+            tbody.innerHTML = '';
+            if (!data) return;
+            const cur = data.vehicle.currency || '₹';
+
+            data.vService.forEach((s, idx) => {
+                let tagColor = s.tag === 'Unplanned' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/45 transition">
+                        <td class="p-4 font-bold text-slate-400">#${idx + 1}</td>
+                        <td class="p-4">${s.date}</td>
+                        <td class="p-4">${s.odometer.toLocaleString()} km</td>
+                        <td class="p-4 font-black text-white">${s.type}</td>
+                        <td class="p-4 text-slate-300 font-medium">${s.parts || '-'}</td>
+                        <td class="p-4"><span class="px-3 py-1 rounded-full text-[10px] font-black ${tagColor}">${s.tag || 'Planned'}</span></td>
+                        <td class="p-4 text-slate-400 font-bold">${s.warranty === 'Yes' ? '✅ Covered' : '❌ Paid'}</td>
+                        <td class="p-4 font-black text-white">${cur}${Number(s.total).toFixed(2)}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="editServiceLog('${s.id}')" class="text-emerald-400 hover:underline font-bold">Edit</button>
+                            <button onclick="deleteServiceLog('${s.id}')" class="text-red-400 hover:underline font-bold">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderExpenseTab() {
+            const data = getActiveScopeData();
+            const tbody = document.getElementById('fullExpenseTableBody');
+            tbody.innerHTML = '';
+            if (!data) return;
+            const cur = data.vehicle.currency || '₹';
+
+            data.vExpense.forEach((e, idx) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/45 transition">
+                        <td class="p-4 font-bold text-slate-400">#${idx + 1}</td>
+                        <td class="p-4">${e.date}</td>
+                        <td class="p-4 font-black text-white">${e.category}</td>
+                        <td class="p-4 text-slate-400">${e.desc || '-'}</td>
+                        <td class="p-4"><span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full text-[10px] font-black">${e.mode}</span></td>
+                        <td class="p-4 font-black text-white">${cur}${Number(e.amount).toFixed(2)}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="editExpenseLog('${e.id}')" class="text-emerald-400 hover:underline font-bold">Edit</button>
+                            <button onclick="deleteExpenseLog('${e.id}')" class="text-red-400 hover:underline font-bold">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderAnalyticsTab() {
+            const tbody = document.getElementById('fleetComparisonTableBody');
+            tbody.innerHTML = '';
+
+            vehicles.forEach(v => {
+                let d = getVehicleData(v.id);
+                if (!d) return;
+                const cur = v.currency || '₹';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/45 transition">
+                        <td class="p-4 font-black text-white">${v.nickname} <span class="text-slate-400 font-normal">(${v.regNumber})</span></td>
+                        <td class="p-4 font-bold">${v.type}</td>
+                        <td class="p-4 font-bold">${d.totalDistanceTracked.toLocaleString()} km</td>
+                        <td class="p-4 font-black text-emerald-400">${cur}${d.allInCostPerKm.toFixed(2)} / km</td>
+                        <td class="p-4 font-bold">${cur}${d.fuelCostPerKm.toFixed(2)} / km</td>
+                        <td class="p-4 font-bold">${d.lifetimeMileage.toFixed(2)} km/L</td>
+                        <td class="p-4 font-black text-white">${cur}${d.grandTotalCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            });
+
+            updateBudgetVariance();
+            runScenarioSimulation();
+        }
+
+        function updateBudgetVariance() {
+            const data = getActiveScopeData();
+            if (!data) return;
+            const budget = parseFloat(document.getElementById('budgetInput').value) || 0;
+            const actual = data.monthlyBurnRate;
+            const variance = budget - actual;
+
+            document.getElementById('actualMonthlySpend').textContent = '₹' + actual.toLocaleString('en-IN', {maximumFractionDigits: 2});
+            let varEl = document.getElementById('budgetVarianceResult');
+            varEl.textContent = (variance >= 0 ? '+₹' : '-₹') + Math.abs(variance).toLocaleString('en-IN', {maximumFractionDigits: 2});
+            varEl.className = variance >= 0 ? 'font-black text-emerald-400' : 'font-black text-red-400';
+        }
+
+        function runScenarioSimulation() {
+            const data = getActiveScopeData();
+            if (!data) return;
+            const delta = parseFloat(document.getElementById('scenarioDelta').value) || 0;
+            const curFuelKm = data.fuelCostPerKm;
+            
+            let totalVol = data.vFuel.reduce((sum, f) => sum + Number(f.volume), 0);
+            let volPerKm = data.totalDistanceTracked > 0 ? totalVol / data.totalDistanceTracked : 0.03;
+            let simulatedFuelKm = curFuelKm + (delta * volPerKm);
+
+            document.getElementById('scenarioCurrentFuelKm').textContent = '₹' + curFuelKm.toFixed(2) + ' / km';
+            document.getElementById('scenarioSimulatedFuelKm').textContent = '₹' + simulatedFuelKm.toFixed(2) + ' / km';
+        }
+
+        function calcFuelTotal() {
+            const vol = parseFloat(document.getElementById('fuel_volume').value) || 0;
+            const price = parseFloat(document.getElementById('fuel_price').value) || 0;
+            document.getElementById('fuel_totalCost').value = (vol * price).toFixed(2);
+        }
+
+        function calcServiceTotal() {
+            const labour = parseFloat(document.getElementById('serv_labour').value) || 0;
+            const parts = parseFloat(document.getElementById('serv_partsCost').value) || 0;
+            document.getElementById('serv_totalCost').value = (labour + parts).toFixed(2);
+        }
+
+        function saveVehicle(e) {
+            e.preventDefault();
+            const id = document.getElementById('veh_id').value || ('veh_' + Date.now());
+            const vehicleObj = {
+                id,
+                nickname: document.getElementById('veh_nickname').value,
+                type: document.getElementById('veh_type').value,
+                make: document.getElementById('veh_make').value,
+                model: document.getElementById('veh_model').value,
+                year: document.getElementById('veh_year').value,
+                regNumber: document.getElementById('veh_reg').value,
+                fuelType: document.getElementById('veh_fuelType').value,
+                purchasePrice: parseFloat(document.getElementById('veh_purchasePrice').value) || 0,
+                purchaseDate: document.getElementById('veh_purchaseDate').value || new Date().toISOString().split('T')[0],
+                deprRate: parseFloat(document.getElementById('veh_deprRate').value) || 15,
+                tankCap: parseFloat(document.getElementById('veh_tankCap').value) || 0,
+                odometer: parseInt(document.getElementById('veh_odometer').value) || 0,
+                currency: document.getElementById('veh_currency').value || '₹',
+                insExpiry: document.getElementById('veh_insExpiry').value,
+                rcExpiry: document.getElementById('veh_rcExpiry').value
+            };
+
+            const index = vehicles.findIndex(v => v.id === id);
+            if (index >= 0) vehicles[index] = vehicleObj;
+            else {
+                vehicles.push(vehicleObj);
+                if (activeVehicleId === 'ALL') activeVehicleId = id;
+            }
+
+            saveAllToStorage();
+            closeModal('vehicleModal');
+            refreshAllViews();
+        }
+
+        function editVehicle(id) {
+            const v = vehicles.find(item => item.id === id);
+            if (!v) return;
+            document.getElementById('veh_id').value = v.id;
+            document.getElementById('veh_nickname').value = v.nickname;
+            document.getElementById('veh_type').value = v.type;
+            document.getElementById('veh_make').value = v.make;
+            document.getElementById('veh_model').value = v.model;
+            document.getElementById('veh_year').value = v.year;
+            document.getElementById('veh_reg').value = v.regNumber;
+            document.getElementById('veh_fuelType').value = v.fuelType;
+            document.getElementById('veh_purchasePrice').value = v.purchasePrice || '';
+            document.getElementById('veh_purchaseDate').value = v.purchaseDate || '';
+            document.getElementById('veh_deprRate').value = v.deprRate || 15;
+            document.getElementById('veh_tankCap').value = v.tankCap;
+            document.getElementById('veh_odometer').value = v.odometer;
+            document.getElementById('veh_currency').value = v.currency;
+            document.getElementById('veh_insExpiry').value = v.insExpiry;
+            document.getElementById('veh_rcExpiry').value = v.rcExpiry;
+            openModal('vehicleModal');
+        }
+
+        function deleteVehicle(id) {
+            if (confirm('Delete this vehicle and all associated logs permanently?')) {
+                vehicles = vehicles.filter(v => v.id !== id);
+                fuelLogs = fuelLogs.filter(f => f.vehicleId !== id);
+                repairLogs = repairLogs.filter(r => r.vehicleId !== id);
+                expenses = expenses.filter(e => e.vehicleId !== id);
+                if (activeVehicleId === id) activeVehicleId = vehicles.length > 0 ? vehicles[0].id : 'ALL';
+                saveAllToStorage();
+                refreshAllViews();
+            }
+        }
+
+        function saveFuelLog(e) {
+            e.preventDefault();
+            let targetVehId = activeVehicleId === 'ALL' ? (vehicles.length > 0 ? vehicles[0].id : null) : activeVehicleId;
+            if (!targetVehId) { alert('Please add or select a vehicle first.'); return; }
+
+            const id = document.getElementById('fuel_id').value || ('fuel_' + Date.now());
+            const odo = parseInt(document.getElementById('fuel_odometer').value);
+            const veh = vehicles.find(v => v.id === targetVehId);
+            if (veh && odo > veh.odometer) veh.odometer = odo;
+
+            const logObj = {
+                id,
+                vehicleId: targetVehId,
+                date: document.getElementById('fuel_date').value,
+                odometer: odo,
+                grade: document.getElementById('fuel_grade').value,
+                volume: parseFloat(document.getElementById('fuel_volume').value),
+                price: parseFloat(document.getElementById('fuel_price').value),
+                total: parseFloat(document.getElementById('fuel_totalCost').value),
+                station: document.getElementById('fuel_station').value,
+                isFull: document.getElementById('fuel_isFull').checked,
+                notes: document.getElementById('fuel_notes').value
+            };
+
+            const index = fuelLogs.findIndex(f => f.id === id);
+            if (index >= 0) fuelLogs[index] = logObj;
+            else fuelLogs.push(logObj);
+
+            saveAllToStorage();
+            closeModal('fuelModal');
+            refreshAllViews();
+        }
+
+        function deleteFuelLog(id) {
+            fuelLogs = fuelLogs.filter(f => f.id !== id);
+            saveAllToStorage();
+            refreshAllViews();
+        }
+
+        function saveServiceLog(e) {
+            e.preventDefault();
+            let targetVehId = activeVehicleId === 'ALL' ? (vehicles.length > 0 ? vehicles[0].id : null) : activeVehicleId;
+            if (!targetVehId) { alert('Please add or select a vehicle first.'); return; }
+
+            const id = document.getElementById('serv_id').value || ('serv_' + Date.now());
+            const odo = parseInt(document.getElementById('serv_odometer').value);
+            const veh = vehicles.find(v => v.id === targetVehId);
+            if (veh && odo > veh.odometer) veh.odometer = odo;
+
+            const logObj = {
+                id,
+                vehicleId: targetVehId,
+                date: document.getElementById('serv_date').value,
+                odometer: odo,
+                type: document.getElementById('serv_type').value,
+                parts: document.getElementById('serv_parts').value,
+                tag: document.getElementById('serv_tag').value,
+                vendor: document.getElementById('serv_vendor').value,
+                desc: document.getElementById('serv_desc').value,
+                labour: parseFloat(document.getElementById('serv_labour').value) || 0,
+                partsCost: parseFloat(document.getElementById('serv_partsCost').value) || 0,
+                total: parseFloat(document.getElementById('serv_totalCost').value),
+                warranty: document.getElementById('serv_warranty').value,
+                nextDate: document.getElementById('serv_nextDate').value,
+                nextOdo: parseInt(document.getElementById('serv_nextOdo').value) || null
+            };
+
+            const index = repairLogs.findIndex(r => r.id === id);
+            if (index >= 0) repairLogs[index] = logObj;
+            else repairLogs.push(logObj);
+
+            saveAllToStorage();
+            closeModal('serviceModal');
+            refreshAllViews();
+        }
+
+        function deleteServiceLog(id) {
+            repairLogs = repairLogs.filter(r => r.id !== id);
+            saveAllToStorage();
+            refreshAllViews();
+        }
+
+        function saveExpenseLog(e) {
+            e.preventDefault();
+            let targetVehId = activeVehicleId === 'ALL' ? (vehicles.length > 0 ? vehicles[0].id : null) : activeVehicleId;
+            if (!targetVehId) { alert('Please add or select a vehicle first.'); return; }
+
+            const id = document.getElementById('exp_id').value || ('exp_' + Date.now());
+            const logObj = {
+                id,
+                vehicleId: targetVehId,
+                date: document.getElementById('exp_date').value,
+                category: document.getElementById('exp_category').value,
+                amount: parseFloat(document.getElementById('exp_amount').value),
+                mode: document.getElementById('exp_mode').value,
+                desc: document.getElementById('exp_desc').value
+            };
+
+            const index = expenses.findIndex(ex => ex.id === id);
+            if (index >= 0) expenses[index] = logObj;
+            else expenses.push(logObj);
+
+            saveAllToStorage();
+            closeModal('expenseModal');
+            refreshAllViews();
+        }
+
+        function deleteExpenseLog(id) {
+            expenses = expenses.filter(e => e.id !== id);
+            saveAllToStorage();
+            refreshAllViews();
+        }
+
+        // --- Multi-Format Import Engine (XLSX, CSV, JSON) ---
+        function importSpreadsheet(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            let targetVehId = activeVehicleId === 'ALL' ? (vehicles.length > 0 ? vehicles[0].id : null) : activeVehicleId;
+            if (!targetVehId) { alert('Please select a specific active vehicle workspace to import data into.'); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    let importedF = 0, importedS = 0, importedE = 0;
+
+                    workbook.SheetNames.forEach(sheetName => {
+                        const jsonSheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                        jsonSheet.forEach((row, i) => {
+                            let lowerSheet = sheetName.toLowerCase();
+                            if (lowerSheet.includes('fuel')) {
+                                fuelLogs.push({
+                                    id: 'fuel_xlsx_' + Date.now() + '_' + i,
+                                    vehicleId: targetVehId,
+                                    date: row['Date'] || new Date().toISOString().split('T')[0],
+                                    odometer: parseInt(row['Odometer']) || 0,
+                                    grade: row['Fuel_Grade'] || row['Grade'] || 'Regular Petrol',
+                                    volume: parseFloat(row['Volume_Litres'] || row['Volume']) || 0,
+                                    price: parseFloat(row['Price_Per_Unit'] || row['Price']) || 0,
+                                    total: parseFloat(row['Total_Cost'] || row['Total']) || 0,
+                                    station: row['Station'] || '',
+                                    isFull: true,
+                                    notes: row['Notes'] || ''
+                                });
+                                importedF++;
+                            } else if (lowerSheet.includes('service') || lowerSheet.includes('repair')) {
+                                repairLogs.push({
+                                    id: 'serv_xlsx_' + Date.now() + '_' + i,
+                                    vehicleId: targetVehId,
+                                    date: row['Date'] || new Date().toISOString().split('T')[0],
+                                    odometer: parseInt(row['Odometer']) || 0,
+                                    type: row['Service_Type'] || row['Type'] || 'General Service',
+                                    parts: row['Parts_Changed'] || row['Parts'] || '',
+                                    tag: row['Tag'] || 'Planned',
+                                    vendor: row['Vendor'] || '',
+                                    desc: row['Description'] || '',
+                                    labour: 0, partsCost: 0,
+                                    total: parseFloat(row['Total_Cost'] || row['Total']) || 0,
+                                    warranty: row['Warranty'] || 'No'
+                                });
+                                importedS++;
+                            } else if (lowerSheet.includes('expense')) {
+                                expenses.push({
+                                    id: 'exp_xlsx_' + Date.now() + '_' + i,
+                                    vehicleId: targetVehId,
+                                    date: row['Date'] || new Date().toISOString().split('T')[0],
+                                    category: row['Category'] || 'Other',
+                                    amount: parseFloat(row['Amount']) || 0,
+                                    mode: row['Payment_Mode'] || 'UPI',
+                                    desc: row['Description'] || ''
+                                });
+                                importedE++;
+                            }
+                        });
+                    });
+
+                    saveAllToStorage();
+                    refreshAllViews();
+                    alert(`Successfully imported from Excel/CSV:\n- Fuel Logs: ${importedF}\n- Service Logs: ${importedS}\n- Expenses: ${importedE}`);
+                    event.target.value = '';
+                } catch (err) {
+                    alert('Error parsing spreadsheet file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- Multi-Format Export Engine (XLSX, CSV, JSON) ---
+        function exportXLSX() {
+            let scopeId = activeVehicleId;
+            let fData = scopeId === 'ALL' ? fuelLogs : fuelLogs.filter(f => f.vehicleId === scopeId);
+            let sData = scopeId === 'ALL' ? repairLogs : repairLogs.filter(r => r.vehicleId === scopeId);
+            let eData = scopeId === 'ALL' ? expenses : expenses.filter(e => e.vehicleId === scopeId);
+
+            let wb = XLSX.utils.book_new();
+            let wsFuel = XLSX.utils.json_to_sheet(fData.map(f => ({ Date: f.date, Odometer: f.odometer, Fuel_Grade: f.grade, Volume_Litres: f.volume, Price_Per_Unit: f.price, Total_Cost: f.total, Station: f.station, Full_Tank: f.isFull, Notes: f.notes })));
+            let wsServ = XLSX.utils.json_to_sheet(sData.map(s => ({ Date: s.date, Odometer: s.odometer, Service_Type: s.type, Parts_Changed: s.parts, Tag: s.tag, Vendor: s.vendor, Total_Cost: s.total, Warranty: s.warranty })));
+            let wsExp = XLSX.utils.json_to_sheet(eData.map(e => ({ Date: e.date, Category: e.category, Amount: e.amount, Payment_Mode: e.mode, Description: e.desc })));
+
+            XLSX.utils.book_append_sheet(wb, wsFuel, "Fuel Logs");
+            XLSX.utils.book_append_sheet(wb, wsServ, "Service Logs");
+            XLSX.utils.book_append_sheet(wb, wsExp, "Expenses");
+
+            XLSX.writeFile(wb, `fleet_master_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportCSV(type) {
+            let dataArr = [];
+            let filename = '';
+            let scopeId = activeVehicleId;
+            const veh = vehicles.find(v => v.id === scopeId) || { regNumber: 'FLEET' };
+
+            if (type === 'fuel') {
+                filename = `fuel_logs_${veh.regNumber}.csv`;
+                dataArr = (scopeId === 'ALL' ? fuelLogs : fuelLogs.filter(f => f.vehicleId === scopeId)).map(f => ({
+                    Date: f.date, Odometer: f.odometer, Fuel_Grade: f.grade, Volume_Litres: f.volume, Price_Per_Unit: f.price, Total_Cost: f.total, Station: f.station, Full_Tank: f.isFull, Notes: f.notes
+                }));
+            } else if (type === 'service') {
+                filename = `repair_logs_${veh.regNumber}.csv`;
+                dataArr = (scopeId === 'ALL' ? repairLogs : repairLogs.filter(r => r.vehicleId === scopeId)).map(r => ({
+                    Date: r.date, Odometer: r.odometer, Service_Type: r.type, Parts_Changed: r.parts, Tag: r.tag, Vendor: r.vendor, Total_Cost: r.total, Warranty: r.warranty
+                }));
+            }
+
+            if (dataArr.length === 0) { alert('No data available for export.'); return; }
+
+            const headers = Object.keys(dataArr[0]);
+            let csvContent = headers.join(',') + '\n';
+            dataArr.forEach(row => {
+                const values = headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`);
+                csvContent += values.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportJSONBackup() {
+            const backupObj = { vehicles, fuelLogs, repairLogs, expenses };
+            const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `fleet_master_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importJSONBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.vehicles && parsed.fuelLogs) {
+                        vehicles = parsed.vehicles;
+                        fuelLogs = parsed.fuelLogs;
+                        repairLogs = parsed.repairLogs || [];
+                        expenses = parsed.expenses || [];
+                        activeVehicleId = 'ALL';
+                        saveAllToStorage();
+                        refreshAllViews();
+                        alert('Data successfully restored!');
+                    } else { alert('Invalid backup file structure.'); }
+                } catch (err) { alert('Error parsing JSON: ' + err.message); }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('WARNING: This will wipe all saved vehicles and logs. Proceed?')) {
+                localStorage.clear();
+                vehicles = []; fuelLogs = []; repairLogs = []; expenses = [];
+                activeVehicleId = 'ALL';
+                refreshAllViews();
+                alert('Database cleared.');
+            }
+        }
+    </script>
+</body>
+</html>
